@@ -10,6 +10,7 @@ import uvicorn
 import worldnewsapi
 from worldnewsapi.models.get_geo_coordinates200_response import GetGeoCoordinates200Response
 from worldnewsapi.models.retrieve_newspaper_front_page200_response import RetrieveNewspaperFrontPage200Response
+from worldnewsapi.models.search_news200_response_news_inner import SearchNews200ResponseNewsInner
 from worldnewsapi.rest import ApiException
 from pprint import pprint
 load_dotenv()
@@ -62,18 +63,28 @@ def get_news():
         #create news instance to get top news of given location
         newsapi_instance = worldnewsapi.NewsApi(worldnewsapi.ApiClient(newsapi_configuration))
 
-        location = newsapi_instance.get_geo_coordinates('Montreal')
+        location = newsapi_instance.get_geo_coordinates('Toronto')
 
 
         response = newsapi_instance.search_news(
                 text='artificial intelligence',
-                source_countries='ca,us',
                 location_filter= str(location.latitude)+', '+str(location.longitude)+',30',
                 language='en',
                 latest_publish_date=formatted_date,
                 number=1
                 )
         
+        json ="{}"
+        search_news200_response_news_inner_instance = SearchNews200ResponseNewsInner.from_json(json)
+        print(SearchNews200ResponseNewsInner.to_json())
+        
+        # local_news = {
+        #     'title':response['title'],
+        #     'author': response['author'],
+        #     'url':response['url'],
+        #     'image':response['image'],
+        #     'text':response['text']
+        # }
         print(response)
         return response.model_dump_json()
 
@@ -96,4 +107,4 @@ async def get_localnew():
     return response
 
 if __name__=='__main__':
-     uvicorn.run(app,'0.0.0.0', port=8033, workers=2)
+     uvicorn.run(app,'0.0.0.0', port=8035, workers=2)
