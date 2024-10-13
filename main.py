@@ -18,31 +18,8 @@ load_dotenv()
 app = FastAPI()
 
 
-#function to get city  geocde
-def getcity_geocode(city):
     
-    url = f"https://api.worldnewsapi.com/geo-coordinates?location={city}"
-    api_key = os.environ["API_KEY"]
-
-    headers = {
-        'x-api-key': api_key
-    }
-
-    response = requests.get(url, headers=headers)
-
-    if response.status_code == 200:
-        data = response.json()
-
-        geocode = str(data['latitude'])+', '+ str(data['longitude']) +', 20'
-        
-
-
-
-        return(geocode)
-    else:
-        return f"Error: {response.status_code}"
-    
-def get_news():
+def get_news(city):
 
     # configuration = worldnewsapi.configuration(
     #     host = "https://api.worldnewsapi.com"
@@ -63,7 +40,7 @@ def get_news():
         #create news instance to get top news of given location
         newsapi_instance = worldnewsapi.NewsApi(worldnewsapi.ApiClient(newsapi_configuration))
 
-        location = newsapi_instance.get_geo_coordinates('Toronto')
+        location = newsapi_instance.get_geo_coordinates(city)
 
 
         response = newsapi_instance.search_news(
@@ -71,38 +48,47 @@ def get_news():
                 location_filter= str(location.latitude)+', '+str(location.longitude)+',30',
                 language='en',
                 latest_publish_date=formatted_date,
-                number=1
+                offset=0,
+                number=2
                 )
         
-        json ="{}"
-        search_news200_response_news_inner_instance = SearchNews200ResponseNewsInner.from_json(json)
-        print(SearchNews200ResponseNewsInner.to_json())
         
-        # local_news = {
-        #     'title':response['title'],
-        #     'author': response['author'],
-        #     'url':response['url'],
-        #     'image':response['image'],
-        #     'text':response['text']
-        # }
+        for news in response.news:
+            
+                local_news ={
+                    "title": str(news.title),
+                    "auteur": str(news.author),
+                    "url": str(news.url),
+                    "text": str(news.text[:300])+"..."
+                }
+
+
+
+
         print(response)
-        return response.model_dump_json()
+        
 
     except worldnewsapi.ApiException as e:
         print("Exception when calling NewsApi->search_news: %s\n" % e)
 
-   
+        local_news ={
+                    "title": "NA",
+                    "auteur": "NA",
+                    "url": "NA",
+                    "text": "NA"
+                }
+
 
     
-
+    return local_news
         
 
    
 
-@app.get("/news")
+@app.get("/news/")
 
-async def get_localnew():
-    response = get_news()
+async def get_localnew(city):
+    response = get_news(city)
 
     return response
 
